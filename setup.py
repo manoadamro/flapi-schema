@@ -7,8 +7,6 @@ NAME = 'flapi-schema'
 VERSION = '0.0.0'
 REQUIRES = [
     'flask',
-    'pyjwt',
-    'jsonpointer'
 ]
 
 
