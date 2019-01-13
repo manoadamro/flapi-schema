@@ -20,6 +20,12 @@ import flask
 from . import errors
 
 
+def _resolve(value: Any):
+    if callable(value):
+        return value()
+    return value
+
+
 class Range:
     def __init__(
         self,
@@ -36,8 +42,8 @@ class Range:
         if value is None:
             return True
 
-        minimum = self.min() if callable(self.min) else self.min
-        maximum = self.max() if callable(self.max) else self.max
+        minimum = _resolve(self.min)
+        maximum = _resolve(self.max)
 
         if minimum is None and maximum is None:
             return True
@@ -128,9 +134,7 @@ class Property(Rule):
             return value
         if not self.nullable and self.default is None:
             raise errors.SchemaValidationError("value should not be None")
-        if callable(self.default):
-            return self.default()
-        return self.default
+        return _resolve(self.default)
 
     def __call__(self, value: Any) -> Any:
         value = self._get_value(value)
