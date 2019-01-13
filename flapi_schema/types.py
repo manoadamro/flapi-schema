@@ -116,14 +116,10 @@ class Property(Rule):
     def __init__(
         self,
         *types: Type[Any],
-        methods: Callable = None,
-        in_response: bool = True,
         nullable: bool = True,
         default: Any = None,
         callback: Callable = None,
     ):
-        self.methods = methods
-        self.in_response = in_response
         self.types = types
         self.nullable = nullable
         self.default = default
@@ -180,15 +176,6 @@ class Object(Property):
     def _valid_values(self, obj: Dict) -> Dict:
         validated = {}
         for key, func in self.schema.items():
-            allowed_methods = getattr(func, "methods", None)
-            if (
-                key in obj
-                and allowed_methods is not None
-                and flask.request.method not in allowed_methods
-            ):
-                raise errors.SchemaValidationError(
-                    f"key not valid for method {flask.request.method}"
-                )
             validated[key] = func(obj.get(key, None))
         return validated
 
