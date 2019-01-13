@@ -2,37 +2,39 @@ import copy
 import datetime
 import functools
 import re
-from typing import Any, Callable, ClassVar, Dict, List, Pattern, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    List,
+    Pattern,
+    Sized,
+    Tuple,
+    Type,
+    Union,
+)
 
 import flask
 
 from . import errors
 
 
-class _Range:
+class Range:
     def __init__(
         self,
-        minimum: Union[
-            List, Tuple, str, int, float, datetime.datetime, datetime.date, None
-        ],
-        maximum: Union[
-            List, Tuple, str, int, float, datetime.datetime, datetime.date, None
-        ],
+        minimum: Union[int, float, datetime.datetime, datetime.date, None],
+        maximum: Union[int, float, datetime.datetime, datetime.date, None],
     ):
         self.min = minimum
         self.max = maximum
 
     def __call__(
-        self,
-        value: Union[
-            List, Tuple, str, int, float, datetime.datetime, datetime.date, None
-        ],
+        self, value: Union[int, float, datetime.datetime, datetime.date, None]
     ) -> bool:
 
         if value is None:
             return True
-        if isinstance(value, (list, tuple, str)):
-            value = len(value)
 
         minimum = self.min() if callable(self.min) else self.min
         maximum = self.max() if callable(self.max) else self.max
@@ -44,6 +46,11 @@ class _Range:
         if maximum is None:
             return value >= minimum
         return minimum <= value <= maximum
+
+
+class SizedRange(Range):
+    def __call__(self, value: Union[Sized, None]) -> bool:
+        super(SizedRange, self).__call__(len(value) if value is not None else value)
 
 
 class Rule:
@@ -198,7 +205,7 @@ class Array(Property):
     ):
         super(Array, self).__init__(list, nullable=False, default=[], callback=callback)
         self.schema = schema() if isinstance(schema, type) else schema
-        self.range = _Range(min_length, max_length)
+        self.range = SizedRange(min_length, max_length)
 
     def __call__(self, value: Union[List[Any], None]) -> Union[List[Any], None]:
         value = super(Array, self).__call__(value)
@@ -239,7 +246,7 @@ class Number(Property):
         **kwargs,
     ):
         super(Number, self).__init__(*types, **kwargs)
-        self.range = _Range(min_value, max_value)
+        self.range = Range(min_value, max_value)
 
     def __call__(self, value: Union[int, float, None]) -> Union[int, float, None]:
         value = super(Number, self).__call__(value)
@@ -274,7 +281,7 @@ class String(Property):
         **kwargs,
     ):
         super(String, self).__init__(str, **kwargs)
-        self.range = _Range(min_length, max_length)
+        self.range = SizedRange(min_length, max_length)
 
     def __call__(self, value: Union[str, None]) -> Union[str, None]:
         value = super(String, self).__call__(value)
@@ -332,7 +339,7 @@ class Date(Property):
         **kwargs,
     ):
         super(Date, self).__init__(datetime.date, **kwargs)
-        self.range = _Range(min_value, max_value)
+        self.range = Range(min_value, max_value)
 
     @classmethod
     def _parse_date(cls, value: str):
@@ -383,7 +390,7 @@ class DateTime(Property):
         **kwargs,
     ):
         super(DateTime, self).__init__(datetime.datetime, **kwargs)
-        self.range = _Range(min_value, max_value)
+        self.range = Range(min_value, max_value)
 
     @classmethod
     def _parse_datetime(cls, value: str):
