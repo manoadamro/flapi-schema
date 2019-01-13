@@ -50,7 +50,9 @@ class Range:
 
 class SizedRange(Range):
     def __call__(self, value: Union[Sized, None]) -> bool:
-        super(SizedRange, self).__call__(len(value) if value is not None else value)
+        return super(SizedRange, self).__call__(
+            len(value) if value is not None else value
+        )
 
 
 class Rule:
