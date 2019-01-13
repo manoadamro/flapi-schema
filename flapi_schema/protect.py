@@ -3,8 +3,6 @@ from typing import Any, Callable, Type, Union
 
 import flask
 
-from flapi_schema import types
-
 from . import errors, types
 
 

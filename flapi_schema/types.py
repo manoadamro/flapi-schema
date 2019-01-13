@@ -15,8 +15,6 @@ from typing import (
     Union,
 )
 
-import flask
-
 from . import errors
 
 
