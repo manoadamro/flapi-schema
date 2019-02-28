@@ -7,6 +7,9 @@ from . import errors, types
 
 
 class Body(dict):
+    def __init__(self, body):
+        body = body or {}
+        super(Body, self).__init__(**body)
 
     def __getattr__(self, item):
         try:
@@ -67,7 +70,7 @@ class Protect:
     def __call__(self, func: Callable) -> Callable:
         @functools.wraps(func)
         def _call(*args: Any, **kwargs: Any) -> Any:
-            body = Body(self.request_body)
+            body = Body(self.request_body) or None
             return func(body, *args, **kwargs)
 
         return _call
