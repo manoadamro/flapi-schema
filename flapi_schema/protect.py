@@ -6,6 +6,21 @@ import flask
 from . import errors, types
 
 
+class Body(dict):
+
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError as ex:
+            raise AttributeError(ex)
+
+    def __setattr__(self, key, value):
+        try:
+            self[key] = value
+        except KeyError as ex:
+            raise AttributeError(ex)
+
+
 class Protect:
     def __init__(
         self,
@@ -52,6 +67,7 @@ class Protect:
     def __call__(self, func: Callable) -> Callable:
         @functools.wraps(func)
         def _call(*args: Any, **kwargs: Any) -> Any:
-            return func(self.request_body, *args, **kwargs)
+            body = Body(self.request_body)
+            return func(body, *args, **kwargs)
 
         return _call
